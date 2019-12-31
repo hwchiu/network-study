@@ -14,6 +14,14 @@ Vagrant.configure("2") do |config|
     #change the source.list
     sudo apt-get update
     sudo apt-get install -y vim git cmake build-essential tcpdump tig jq
+
+    # Install modified kernel module
+    git clone https://github.com/hwchiu/network-study
+    sudo apt-get install -y linux-headers-$(uname -r)
+    cd network-study/iptables/masquerade/module
+    sudo make
+    sudo cp ipt_MASQUERADE.ko /lib/modules/$(uname -r)/kernel/net/netfilter/xt_statistic.ko
+
     # Install ntp
     sudo apt-get install -y ntp
     # Install Docker
@@ -23,12 +31,6 @@ Vagrant.configure("2") do |config|
     sudo apt-get update
     sudo apt-get install -y docker-ce=${DOCKER_VERSION}
 
-    echo 3 | sudo tee /proc/sys/net/ipv4/tcp_fastopen
-    git clone https://github.com/hwchiu/network-study
-    sudo apt-get install -y linux-headers-$(uname -r)
-    cd network-study/iptables/masquerade/module
-    #sudo make
-    #sudo cp xt_statistic.ko /lib/modules/$(uname -r)/kernel/net/netfilter/xt_statistic.ko
 
   SHELL
 
