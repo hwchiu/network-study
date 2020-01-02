@@ -36,10 +36,10 @@ static void show_status(struct sk_buff *skb, const struct xt_action_param *par)
 
 	ct = nf_ct_get(skb, &ctinfo);
 	tuple = &(ct->tuplehash[IP_CT_DIR_ORIGINAL].tuple);
-	printk("ORIGINAL: l3 protocol number:%d, src-ipv4:%pI4, src-port:%u, dst-ipv4:%pI4, dst-port:%u\n", tuple->src.l3num, (void*)&tuple->src.u3.ip, ntohs(tuple->src.u.tcp.port),(void*)&tuple->dst.u3.ip, ntohs(tuple->dst.u.tcp.port));
+	printk("ORIGINAL: outgoing interface: %s, src-ipv4:%pI4, src-port:%u, dst-ipv4:%pI4, dst-port:%u\n", xt_out(par)->name, (void*)&tuple->src.u3.ip, ntohs(tuple->src.u.tcp.port),(void*)&tuple->dst.u3.ip, ntohs(tuple->dst.u.tcp.port));
 
 	tuple = &(ct->tuplehash[IP_CT_DIR_REPLY].tuple);
-	printk("REPLY: l3 protocol number:%d, src-ipv4:%pI4, src-port:%u, dst-ipv4:%pI4, dst-port:%u\n", tuple->src.l3num, (void*)&tuple->src.u3.ip, ntohs(tuple->src.u.tcp.port),(void*)&tuple->dst.u3.ip, ntohs(tuple->dst.u.tcp.port));
+	printk("REPLY: outgoing interface: %s, src-ipv4:%pI4, src-port:%u, dst-ipv4:%pI4, dst-port:%u\n", xt_out(par)->name, (void*)&tuple->src.u3.ip, ntohs(tuple->src.u.tcp.port),(void*)&tuple->dst.u3.ip, ntohs(tuple->dst.u.tcp.port));
 	return;
 }
 
