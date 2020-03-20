@@ -23,11 +23,11 @@ Vagrant.configure("2") do |config|
     sudo usermod -aG docker $USER
 
     #Install module
-    modprobe -- ip_vs
-    modprobe -- ip_vs_rr
-    modprobe -- ip_vs_wrr
-    modprobe -- ip_vs_sh
-    modprobe -- nf_conntrack_ipv4
+    sudo modprobe -- ip_vs
+    sudo modprobe -- ip_vs_rr
+    sudo modprobe -- ip_vs_wrr
+    sudo modprobe -- ip_vs_sh
+    sudo modprobe -- nf_conntrack_ipv4
 
     #Disable swap
     #https://github.com/kubernetes/kubernetes/issues/53533
