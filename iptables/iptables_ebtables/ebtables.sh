@@ -21,7 +21,7 @@ delete() {
 }
 
 check() {
-    count=`ebtables-save | grep ebtable | wc -l`
+    count=`ebtables-save | grep ebtable | grep -v ebtables-save | wc -l`
     if [ "$count" == "0" ]; then
         echo "Delete Success"
     else

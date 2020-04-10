@@ -69,7 +69,7 @@ delete() {
 }
 
 check() {
-    count=`iptables-save | grep iptable | wc -l`
+    count=`iptables-save | grep iptable | grep -v iptables-save | wc -l`
     if [ "$count" == "0" ]; then
         echo "Delete Success"
     else
