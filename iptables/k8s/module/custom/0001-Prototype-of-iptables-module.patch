@@ -1,0 +1,125 @@
+From a7b0ca937c8e1a4bba00972dc6ba1b5aba3678eb Mon Sep 17 00:00:00 2001
+From: hungwei <hungwei@opennetworking.org>
+Date: Tue, 28 Apr 2020 17:37:30 +0000
+Subject: [PATCH 1/1] Prototype of iptables module
+
+---
+ extensions/libxt_hwchiu.c           | 87 +++++++++++++++++++++++++++++
+ include/linux/netfilter/xt_hwchiu.h | 11 ++++
+ 2 files changed, 98 insertions(+)
+ create mode 100644 extensions/libxt_hwchiu.c
+ create mode 100644 include/linux/netfilter/xt_hwchiu.h
+
+diff --git a/extensions/libxt_hwchiu.c b/extensions/libxt_hwchiu.c
+new file mode 100644
+index 00000000..467a2df2
+--- /dev/null
++++ b/extensions/libxt_hwchiu.c
+@@ -0,0 +1,87 @@
++#include <math.h>
++#include <stdio.h>
++#include <string.h>
++#include <xtables.h>
++#include <linux/netfilter/xt_hwchiu.h>
++
++static void hwchiu_help(void)
++{
++	printf(
++"hwchiu match options:\n"
++" --prefix prefix output prefix\n"
++	);
++}
++
++enum {
++	O_PREFIX = 0
++};
++
++static const struct xt_option_entry hwchiu_opts[] = {
++	{.name = "prefix", .id = O_PREFIX, .type = XTTYPE_STRING,
++	 .flags = XTOPT_MAND},
++	XTOPT_TABLEEND,
++};
++
++static void hwchiu_parse(struct xt_option_call *cb)
++{
++	struct xt_hwchiu_info *info = cb->data;
++
++	//!
++//	if (cb->invert)
++//		info->flags |= XT_STATISTIC_INVERT;
++
++	xtables_option_parse(cb);
++	switch (cb->entry->id) {
++	case O_PREFIX:
++		strncpy(info->prefix, cb->arg, LENGTH);
++		break;
++	}
++}
++
++static void hwchiu_check(struct xt_fcheck_call *cb)
++{
++	struct xt_hwchiu_info *info = cb->data;
++
++	if (0 == (strncmp(info->prefix, "hwchiu", LENGTH))) {
++		xtables_error(PARAMETER_PROBLEM, "hwchiu is build-in word, try another");
++	}
++}
++
++static void
++hwchiu_print(const void *ip, const struct xt_entry_match *match, int numeric)
++{
++	const struct xt_hwchiu_info *info = (const void *)match->data;
++	printf("prefix %s", info->prefix);
++}
++
++static void hwchiu_save(const void *ip, const struct xt_entry_match *match)
++{
++	const struct xt_hwchiu_info *info = (const void *)match->data;
++	printf("prefix %s", info->prefix);
++}
++
++static int hwchiu_xlate(struct xt_xlate *xl,
++			   const struct xt_xlate_mt_params *params)
++{
++	return 1;
++}
++
++static struct xtables_match hwchiu_match = {
++	.family		= NFPROTO_UNSPEC,
++	.name		= "hwchiu",
++	.version	= XTABLES_VERSION,
++	.size		= XT_ALIGN(sizeof(struct xt_hwchiu_info)),
++	.userspacesize  = XT_ALIGN(sizeof(struct xt_hwchiu_info)),
++	.help		= hwchiu_help,
++	.x6_parse	= hwchiu_parse,
++	.x6_fcheck	= hwchiu_check,
++	.print		= hwchiu_print,
++	.save		= hwchiu_save,
++	.x6_options	= hwchiu_opts,
++	.xlate		= hwchiu_xlate,
++};
++
++void _init(void)
++{
++	xtables_register_match(&hwchiu_match);
++}
+diff --git a/include/linux/netfilter/xt_hwchiu.h b/include/linux/netfilter/xt_hwchiu.h
+new file mode 100644
+index 00000000..f4993f83
+--- /dev/null
++++ b/include/linux/netfilter/xt_hwchiu.h
+@@ -0,0 +1,11 @@
++#ifndef _XT_HWCHIU_H
++#define _XT_HWCHIU_H
++
++#include <linux/types.h>
++#define LENGTH 16
++
++struct xt_hwchiu_info {
++	char	prefix[LENGTH];
++};
++
++#endif /* _XT_HWCHIU_H */
+-- 
+2.17.1
+

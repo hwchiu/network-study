@@ -12,9 +12,8 @@ Vagrant.configure("2") do |config|
 
     #change the source.list
     sudo apt-get update
-    sudo apt-get install -y vim git cmake build-essential tcpdump tig jq
-    # Install ntp
-    sudo apt-get install -y ntp
+    sudo apt-get install -y vim git cmake build-essential tcpdump tig jq autoconf linux-headers-$(uname -r) autogen libtool libnfnetlink-dev silversearcher-ag
+
     # Install Docker
     # kubernetes official max validated version: 17.03.2~ce-0~ubuntu-xenial
     export DOCKER_VERSION="18.06.3~ce~3-0~ubuntu"
@@ -24,10 +23,16 @@ Vagrant.configure("2") do |config|
     sudo apt-get install -y docker-ce=${DOCKER_VERSION}
 
     git clone https://github.com/hwchiu/network-study
-    sudo apt-get install -y linux-headers-$(uname -r)
     cd ~/network-study/iptables/k8s/module
     sudo make
     sudo cp xt_statistic.ko /lib/modules/$(uname -r)/kernel/net/netfilter/xt_statistic.ko
+
+    cd ~/network-study/iptables/k8s/custom/user
+    git clone -b v1.6.1 git://git.netfilter.org/iptables
+    cd iptables
+    ./autogen.sh
+    ./configure --disable-nftables --enable-static --enable-shared
+    make
 
     # Install Kubernetes
     export KUBE_VERSION="1.13.5"
@@ -45,9 +50,6 @@ Vagrant.configure("2") do |config|
     sudo chown $(id -u):$(id -g) $HOME/.kube/config
     kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
     kubectl taint nodes --all node-role.kubernetes.io/master-
-
-    kubectl apply -f "https://cloud.weave.works/k8s/scope.yaml?k8s-version=$(kubectl version | base64 | tr -d '\n')"
-
   SHELL
 
   config.vm.network :private_network, ip: "172.17.8.111"
