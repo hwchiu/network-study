@@ -89,7 +89,6 @@ hwchiu_mt(const struct sk_buff *skb, struct xt_action_param *par)
     } else if (IPPROTO_TCP == iph->protocol) {
     	tcph = tcp_hdr(skb);
 	printk("[%s]TCP packet: %pI4:%d -> %pI4:%d, %d\n", info->prefix, &iph->saddr, ntohs(tcph->source), &iph->daddr,ntohs(tcph->dest), tcph->seq);
-	ret = true;
     }
     return ret;
 }
