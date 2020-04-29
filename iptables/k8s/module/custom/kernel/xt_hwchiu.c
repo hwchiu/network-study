@@ -11,7 +11,7 @@
 #include <linux/netfilter/x_tables.h>
 #include <linux/module.h>
 
-#define LENGTH 16
+#define LENGTH 64
 
 struct xt_hwchiu_info {
 	char	prefix[LENGTH];
@@ -27,7 +27,9 @@ hwchiu_mt(const struct sk_buff *skb, struct xt_action_param *par)
 {
     const struct xt_hwchiu_info *info = par->matchinfo;
     unsigned char *user_data;   /* UDP data begin pointer */
-    bool ret = true;
+    char question[LENGTH];
+    int ql=0;
+    bool ret = false;
     struct iphdr *iph;          /* IPv4 header */
     struct tcphdr *tcph;
     struct udphdr *udph;
@@ -36,6 +38,10 @@ hwchiu_mt(const struct sk_buff *skb, struct xt_action_param *par)
     u8 *_length;
     int count;
     int i;
+
+    for (i = 0; i < LENGTH; i++) {
+    	question[i] = 0;
+    }
 
     iph = ip_hdr(skb);          /* get IP header */
     if (IPPROTO_UDP == iph->protocol) {
@@ -51,19 +57,39 @@ hwchiu_mt(const struct sk_buff *skb, struct xt_action_param *par)
 	    printk("RA: %d, Z: %d, AD:%d, CD:%d, RCODE:%d\n", ((*_qr))&0x80,((*_qr))&0x40,((*_qr))&0x20,((*_qr))&0x10,((*_qr))&0x0f);
 	    count = 12;
 	    _length = &user_data[count];
-	    printk("question: \n");
 	    while (0 != (*_length)) {
 		 for( i = 0; i < *_length; i++) {
-		   printk("%c", user_data[1+count+i]);
+	           question[ql++]=user_data[1+count+i];
 		 }
-		 printk("-");
+
 	         count = count + 1 + *_length;    
 	         _length = &user_data[count];
+		 if (0 != (*_length)) {
+                   question[ql++]='.';
+		 }
 	    }
+
+	    question[ql]=0;
+	    printk("target: %s question: %s", info->prefix, question);
+	    if (1 == (count%2)) {
+		count++;
+	    }
+
+	    _id = (u16*)(&user_data[count]);
+	    if (1 == ntohs(*_id)) {
+		printk("A Record");
+	    }
+
+	    if (0 == strncmp(info->prefix, question, LENGTH)) {
+		    printk("Match target");
+		    ret = true;
+	    }
+
 	}
     } else if (IPPROTO_TCP == iph->protocol) {
     	tcph = tcp_hdr(skb);
 	printk("[%s]TCP packet: %pI4:%d -> %pI4:%d, %d\n", info->prefix, &iph->saddr, ntohs(tcph->source), &iph->daddr,ntohs(tcph->dest), tcph->seq);
+	ret = true;
     }
     return ret;
 }
@@ -98,6 +124,7 @@ static struct xt_match xt_hwchiu_mt_reg __read_mostly = {
 
 static int __init hwchiu_mt_init(void)
 {
+    printk(KERN_INFO "init module \n");
     return xt_register_match(&xt_hwchiu_mt_reg);
 }
 
