@@ -6,6 +6,7 @@
 #include <linux/proc_fs.h>
 #include <linux/ip.h>
 #include <linux/udp.h>
+#include <linux/tcp.h>
 #include <linux/inet.h>
 #include <linux/netfilter/x_tables.h>
 #include <linux/module.h>
@@ -25,11 +26,45 @@ static bool
 hwchiu_mt(const struct sk_buff *skb, struct xt_action_param *par)
 {
     const struct xt_hwchiu_info *info = par->matchinfo;
+    unsigned char *user_data;   /* UDP data begin pointer */
     bool ret = true;
     struct iphdr *iph;          /* IPv4 header */
+    struct tcphdr *tcph;
+    struct udphdr *udph;
+    u16 *_id;
+    u8 *_qr;
+    u8 *_length;
+    int count;
+    int i;
 
     iph = ip_hdr(skb);          /* get IP header */
-    //We only check UDP
+    if (IPPROTO_UDP == iph->protocol) {
+	udph = udp_hdr(skb);
+    	user_data = (unsigned char *)((unsigned char *)udph + sizeof(struct udphdr));
+	printk("[%s]UDP packet: %pI4:%d -> %pI4:%d \n", info->prefix, &iph->saddr, ntohs(udph->source), &iph->daddr,ntohs(udph->dest));
+	if (53 == ntohs(udph->dest)) {
+	    printk("DNS data\n");
+	    _id = (u16*)(&user_data[0]);
+            _qr = (u8*)(&user_data[2]);
+	    printk("ID: %d\n", ntohs(*_id));
+	    printk("QR: %d, OpCode: %d, AA:%d, TC:%d, RD:%d\n", ((*_qr))&0x80,((*_qr))&0x78,((*_qr))&0x04,((*_qr))&0x02,((*_qr))&0x01);
+	    printk("RA: %d, Z: %d, AD:%d, CD:%d, RCODE:%d\n", ((*_qr))&0x80,((*_qr))&0x40,((*_qr))&0x20,((*_qr))&0x10,((*_qr))&0x0f);
+	    count = 12;
+	    _length = &user_data[count];
+	    printk("question: \n");
+	    while (0 != (*_length)) {
+		 for( i = 0; i < *_length; i++) {
+		   printk("%c", user_data[1+count+i]);
+		 }
+		 printk("-");
+	         count = count + 1 + *_length;    
+	         _length = &user_data[count];
+	    }
+	}
+    } else if (IPPROTO_TCP == iph->protocol) {
+    	tcph = tcp_hdr(skb);
+	printk("[%s]TCP packet: %pI4:%d -> %pI4:%d, %d\n", info->prefix, &iph->saddr, ntohs(tcph->source), &iph->daddr,ntohs(tcph->dest), tcph->seq);
+    }
     return ret;
 }
 

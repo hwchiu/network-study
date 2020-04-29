@@ -1,4 +1,4 @@
-From a7b0ca937c8e1a4bba00972dc6ba1b5aba3678eb Mon Sep 17 00:00:00 2001
+From 1f79cbbc853e74bf602442cc020389e5a480b158 Mon Sep 17 00:00:00 2001
 From: hungwei <hungwei@opennetworking.org>
 Date: Tue, 28 Apr 2020 17:37:30 +0000
 Subject: [PATCH 1/1] Prototype of iptables module
@@ -12,7 +12,7 @@ Subject: [PATCH 1/1] Prototype of iptables module
 
 diff --git a/extensions/libxt_hwchiu.c b/extensions/libxt_hwchiu.c
 new file mode 100644
-index 00000000..467a2df2
+index 00000000..10623dc8
 --- /dev/null
 +++ b/extensions/libxt_hwchiu.c
 @@ -0,0 +1,87 @@
@@ -26,7 +26,7 @@ index 00000000..467a2df2
 +{
 +	printf(
 +"hwchiu match options:\n"
-+" --prefix prefix output prefix\n"
++" --domain domain output domain\n"
 +	);
 +}
 +
@@ -35,7 +35,7 @@ index 00000000..467a2df2
 +};
 +
 +static const struct xt_option_entry hwchiu_opts[] = {
-+	{.name = "prefix", .id = O_PREFIX, .type = XTTYPE_STRING,
++	{.name = "domain", .id = O_PREFIX, .type = XTTYPE_STRING,
 +	 .flags = XTOPT_MAND},
 +	XTOPT_TABLEEND,
 +};
@@ -51,7 +51,7 @@ index 00000000..467a2df2
 +	xtables_option_parse(cb);
 +	switch (cb->entry->id) {
 +	case O_PREFIX:
-+		strncpy(info->prefix, cb->arg, LENGTH);
++		strncpy(info->domain, cb->arg, LENGTH);
 +		break;
 +	}
 +}
@@ -60,7 +60,7 @@ index 00000000..467a2df2
 +{
 +	struct xt_hwchiu_info *info = cb->data;
 +
-+	if (0 == (strncmp(info->prefix, "hwchiu", LENGTH))) {
++	if (0 == (strncmp(info->domain, "hwchiu", LENGTH))) {
 +		xtables_error(PARAMETER_PROBLEM, "hwchiu is build-in word, try another");
 +	}
 +}
@@ -69,13 +69,13 @@ index 00000000..467a2df2
 +hwchiu_print(const void *ip, const struct xt_entry_match *match, int numeric)
 +{
 +	const struct xt_hwchiu_info *info = (const void *)match->data;
-+	printf("prefix %s", info->prefix);
++	printf(" --domain(L) %s", info->domain);
 +}
 +
 +static void hwchiu_save(const void *ip, const struct xt_entry_match *match)
 +{
 +	const struct xt_hwchiu_info *info = (const void *)match->data;
-+	printf("prefix %s", info->prefix);
++	printf(" --domain(S) %s", info->domain);
 +}
 +
 +static int hwchiu_xlate(struct xt_xlate *xl,
@@ -105,7 +105,7 @@ index 00000000..467a2df2
 +}
 diff --git a/include/linux/netfilter/xt_hwchiu.h b/include/linux/netfilter/xt_hwchiu.h
 new file mode 100644
-index 00000000..f4993f83
+index 00000000..02007cb4
 --- /dev/null
 +++ b/include/linux/netfilter/xt_hwchiu.h
 @@ -0,0 +1,11 @@
@@ -113,10 +113,10 @@ index 00000000..f4993f83
 +#define _XT_HWCHIU_H
 +
 +#include <linux/types.h>
-+#define LENGTH 16
++#define LENGTH 64
 +
 +struct xt_hwchiu_info {
-+	char	prefix[LENGTH];
++	char	domain[LENGTH];
 +};
 +
 +#endif /* _XT_HWCHIU_H */
