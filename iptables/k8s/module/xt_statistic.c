@@ -218,9 +218,9 @@ statistic_mt(const struct sk_buff *skb, struct xt_action_param *par)
                 unsigned int dest_ip = getDestinationIP(skb);
                 enum MATCH_RESULT result;
 
-                printk(KERN_INFO "try to match %d:%d", cluster_ip, dest_ip);
+                printk("try to match %s:%pI4", clusterIP, &dest_ip);
                 if (cluster_ip == dest_ip) {
-                    printk(KERN_INFO "match the IP address");
+                    printk("cluster_ip match");
                     result = checkL7LB((struct sk_buff*)skb);
 
                     if (result == SUCCESS)
